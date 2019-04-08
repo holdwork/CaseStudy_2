@@ -4,6 +4,7 @@ library(dplyr)
 library(psych)
 library(Hmisc)
 library(mlr)
+library(InformationValue)
 data1 <- read_excel("C:/Users/jhold/Desktop/case study 2/CaseStudy2-data.xlsx")
 str(data1)
 
@@ -268,7 +269,7 @@ pc5 <- principal(x, nfactors=2, rotate="promax")
 
 data1$sex[data1$Gender=="Female"]  = 2
 data1$sex[data1$Gender=="Male"]  = 1
-data1$sex <- as.factor(data1$sex)
+data1$sex <- as.numeric(data1$sex)
 FreqTable(data1$sex)
 data1$AttNum[data1$Attrition=="Yes"]  = 1
 data1$AttNum[data1$Attrition=="No"]  = 0
@@ -402,15 +403,18 @@ data1$Divorced<- as.factor(data1$Divorced)
 
 data1$Single <- 0
 data1$Single[data1$MaritalStatus=="Single"]  = 1
-data1$Single<- as.factor(data1$Single)
+data1$Single<- as.numeric(data1$Single)
 
 data1$OT <- 0
 data1$OT[data1$OverTime=="Yes"]  = 1
-data1$OT<- as.factor(data1$OT)
+data1$OT<- as.numeric(data1$OT)
+
+data1$SexOT <- data1$sex * data1$OT
+data1$SexSingle <- data1$sex * data1$Single
+
 
 FreqTable(data1$OT)
 table(data1$OT,data1$OverTime)
-
 
 data1$id<- 1:nrow(data1)
 data1train <- data1 %>% dplyr::sample_frac(.75)
@@ -419,8 +423,171 @@ data1test  <- dplyr::anti_join(data1, data1train, by = 'id')
 str(data1train)
 str(data1test)
 
-logout1 <- glm(AttNum ~ OT, data=data1, family="binomial")
+
+#### initial model exploration with dummy coded categorical data no interactions
+
+logout1 <- glm(AttNum ~OT + Single + Married + Managejob + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + TDdegree + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+               + sex 
+               , data=data1train, family=binomial(link="logit"))
 summary(logout1)
 
-trainTask <- makeClassifTask(data = data1train,target = "data1$AttNum ")
-testTask <- makeClassifTask(data = data1test, target = "data1$AttNum ")
+
+
+#### initial model exploration with dummy coded categorical data including interaction terms for sex
+
+logout1 <- glm(AttNum ~OT + Single + Married + Managejob + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + TDdegree + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+               + sex + SexOT + SexSingle
+                 , data=data1train, family=binomial(link="logit"))
+summary(logout1)
+
+#### second eploratory model for dummy coded data including only p < .10 based on initial model no interactions
+
+logout2 <- glm(AttNum ~ OT + Single + SalRepjob + SalExecjob + ResScijob + ResDirjob + LabTechjob + HRjob + NonTravel + FreqTravel + sex
+               , data=data1train, family=binomial(link="logit"))
+summary(logout2)
+
+##### third exploratory model of dummy variables only p < .05
+logout3 <- glm(AttNum ~ OT + Single + SalRepjob + SalExecjob + ResScijob + LabTechjob + HRjob + NonTravel + FreqTravel + sex
+               +                , data=data1train, family=binomial(link="logit"))
+summary(logout3)
+
+library(gmodels)
+
+data1train$pred1 <- logout3$fitted.values
+data1train$Class1 <- 0
+data1train$Class1[data1train$pred1 >= .50]  = 1
+mftr1 <-CrossTable(data1train$AttNum, data1train$Class1)
+
+
+data1test$pred1 <- predict(logout3, data1test, type="response") 
+data1test$Class1 <- 0
+data1test$Class1[data1test$pred1 >= .50]  = 1
+mfte1 <-CrossTable(data1test$AttNum, data1test$Class1)
+
+#### initial model with ordinal and continuous variables
+logoutc1 <- glm(AttNum ~Age+ DailyRate  + DistanceFromHome  + EnvironmentSatisfaction  + JobInvolvement + JobLevel + JobSatisfaction 
+                + MonthlyIncome  + PercentSalaryHike  + StockOptionLevel + TotalWorkingYears  + TrainingTimesLastYear + WorkLifeBalance
+                + YearsAtCompany + YearsInCurrentRole  + YearsWithCurrManager 
+               , data=data1train, family=binomial(link="logit"))
+
+summary(logoutc1)
+
+#### initial model with ordinal and continuous variables drop all p < .10
+logoutc2 <- glm(AttNum ~Age+ DistanceFromHome  + EnvironmentSatisfaction  + JobInvolvement  + JobSatisfaction 
+                + PercentSalaryHike  + StockOptionLevel + WorkLifeBalance
+                + YearsAtCompany + YearsInCurrentRole  + YearsWithCurrManager 
+                , data=data1train, family=binomial(link="logit"))
+
+summary(logoutc2)
+
+
+#### initial model with ordinal and continuous variables only p < .05
+logoutc3 <- glm(AttNum ~Age+ DistanceFromHome  + EnvironmentSatisfaction  + JobInvolvement  + JobSatisfaction 
+                + StockOptionLevel + WorkLifeBalance
+                + YearsInCurrentRole 
+                , data=data1train, family=binomial(link="logit"))
+
+summary(logoutc3)
+
+data1train$predc1 <- logoutc3$fitted.values
+data1train$Classc1 <- 0
+data1train$Classc1[data1train$predc1 >= .50]  = 1
+mftrc1 <-CrossTable(data1train$AttNum, data1train$Classc1)
+
+
+data1test$predc1 <- predict(logoutc3, data1test, type="response") 
+data1test$Classc1 <- 0
+data1test$Classc1[data1test$predc1 >= .50]  = 1
+mftec1 <-CrossTable(data1test$AttNum, data1test$Classc1)
+
+##### model with combined significant dummy variables and ordinal/continuous variables
+
+logoutt1 <- glm(AttNum ~OT + Single + SalRepjob + SalExecjob + ResScijob + LabTechjob + HRjob + NonTravel + FreqTravel + sex +
+                  Age+ DistanceFromHome  + EnvironmentSatisfaction  + JobInvolvement  + JobSatisfaction 
+                + StockOptionLevel + WorkLifeBalance+ YearsInCurrentRole 
+                , data=data1train, family=binomial(link="logit"))
+
+summary(logoutt1)
+
+
+##### final model with combined significant dummy variables and ordinal/continuous variables and none < .05
+
+logoutt2 <- glm(AttNum ~OT + Single + SalRepjob + SalExecjob  + LabTechjob + HRjob + NonTravel + FreqTravel + sex +
+                  Age+ DistanceFromHome  + EnvironmentSatisfaction  + JobInvolvement  + JobSatisfaction 
+               + WorkLifeBalance+ YearsInCurrentRole 
+                , data=data1train, family=binomial(link="logit"))
+
+summary(logoutt2)
+
+data1train$predt1 <- logoutt2$fitted.values
+data1train$Classt1 <- 0
+data1train$Classt1[data1train$predt1 >= .50]  = 1
+mftrt1 <-CrossTable(data1train$AttNum, data1train$Classt1)
+
+
+data1test$predt1 <- predict(logoutt2, data1test, type="response") 
+data1test$Classt1 <- 0
+data1test$Classt1[data1test$predt1 >= .50]  = 1
+mftet1 <-CrossTable(data1test$AttNum, data1test$Classt1)
+
+logouttest <- glm(AttNum ~OT + Single + SalRepjob + SalExecjob  + LabTechjob + HRjob + NonTravel + FreqTravel + sex +
+                  Age+ DistanceFromHome  + EnvironmentSatisfaction  + JobInvolvement  + JobSatisfaction 
+                + WorkLifeBalance+ YearsInCurrentRole 
+                , data=data1test, family=binomial(link="logit"))
+
+summary(logouttest)
+
+
+##### can we make a more parsimonious model
+
+logoutt3 <- glm(AttNum ~OT + Single + SalRepjob + DistanceFromHome  + EnvironmentSatisfaction + JobSatisfaction 
+                    , data=data1train, family=binomial(link="logit"))
+
+summary(logoutt3)
+
+#### the AIC is much higher for the reduced model and not even close to the full model
+
+library(ROCR)
+
+##### include everyting model
+logoute1 <- glm(AttNum ~Age+ DailyRate  + DistanceFromHome  + EnvironmentSatisfaction  + JobInvolvement + JobLevel + JobSatisfaction 
+                + MonthlyIncome  + PercentSalaryHike  + StockOptionLevel + TotalWorkingYears  + TrainingTimesLastYear + WorkLifeBalance
+                + YearsAtCompany + YearsInCurrentRole  + YearsWithCurrManager+ OT + Single + Married  + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                  LabTechjob + HRjob  + TDdegree + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+                + sex 
+                , data=data1train, family=binomial(link="logit"))
+summary(logoute1)
+summary(logoutt2)
+
+
+
+
+
+
+
+
+
+str(data1train)
+
+data2train <- data1train[,c(1,4,6,7,11,13,14,15,17,19,20,21,24,25,26,28,29,30,31,32,33,34,35,36:59)]
+data2test <- data1test[,c(1,4,6,7,11,13,14,15,17,19,20,21,24,25,26,28,29,30,31,32,33,34,35,36:59)]
+str(data2test)
+
+trainTask <- makeClassifTask(data = data2train,target = "AttNum")
+lrn1 <- makeLearner("classif.logreg", predict.type = "prob")
+testTask <- makeClassifTask(data = data2test, target = "AttNum")
+trainmod1 <- train(learner=lrn1,task=trainTask)
+predmod1<- predict(trainmod1, task=trainTask, data=data2test)
+
+getLearnerModel(trainmod1)
+
+
+calculateConfusionMatrix(predmod1)
+
+
+
+print(lrn1)
+summary(lrn1)
+
