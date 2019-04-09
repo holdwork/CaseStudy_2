@@ -1,0 +1,96 @@
+---
+title: "CaseStudy2"
+author: "Robert Hazell"
+date: "4/6/2019"
+output: 
+  html_document:
+    keep_md: true
+---
+
+```{r include=FALSE} 
+knitr::opts_chunk$set(comment = NA, warning = FALSE, message = FALSE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+library(readxl)
+emp_data <- read_excel("~/Desktop/DataScience@SMU/DoingDataScience/CaseStudy2/CaseStudy2-data.xlsx")
+```
+
+Exploratory questions
+- proportion of people married in each job role
+- proportion of males and females in each job role
+- frequency of travel by job role
+- which roles have high average employee loyality (measured by YearsAtCompany)
+
+High level statistics of number of people married in each role.
+
+```{r}
+emp_marital <- emp_data %>%
+  group_by(JobRole) %>%
+  summarise(Married = sum(MaritalStatus == "Married"),
+            Single = sum(MaritalStatus == "Single"),
+            Divorced = sum(MaritalStatus == "Divorced"))
+
+# tidy to make grouped barplot
+emp_marital_revised <- emp_marital %>% 
+  gather(Married, Single, Divorced, 
+         key = "Marriage Status", value = "Employees")
+
+# plot
+ggplot(emp_marital_revised, aes(JobRole, Employees, fill = `Marriage Status`)) +
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  ggtitle("Number of Employees in each Marital Status by Job Role") + 
+  xlab("Job Role") + 
+  labs(fill = "Marriage Status") + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", family = "Helvetica"))
+```
+
+Immediately we can see Sales Execs, Research Scientists, and Lab Technicians comprise the majority of single, married, and divorced workers.
+
+Do jobs that require more frequent travel also feature a higher number of divorced employees?  Note that causality cannot be inferred here; in other words, we don't know if they're divorced for work-related reasons or not.  We're just seeking to establish correlation.
+
+Alternatively, which job roles feature employees with higher ```RelationshipSatisfaction```?
+
+Let's answer the first question.
+
+```{r}
+emp_data %>% 
+  group_by(BusinessTravel) %>%
+  summarise(Divorced = sum(MaritalStatus == "Divorced")) %>%
+  arrange(desc(Divorced))
+```
+
+Those who travel frequently fall in the middle in terms of divorce numbers, but again we cannot make causal inferences.
+
+Now we'll like to see which job roles hold the highest average worker employment length
+
+```{r}
+emp_data %>%
+  group_by(JobRole) %>%
+  summarise(`Avg Yrs at Company` = round(mean(YearsAtCompany),2)) %>%
+  arrange(desc(`Avg Yrs at Company`))
+```
+
+Not suprisingly, Managers have worked longer at their current company and sales reps the least.
+
+For each job role, do males or females tend to have longer commutes?  Our initial guess is that distance doesn't significantly differ. Let's see:
+
+```{r}
+emp_data %>%
+  group_by(JobRole, Gender) %>%
+  summarise(`Avg Commute Distance` = mean(DistanceFromHome)) %>%
+  ggplot(aes(JobRole, `Avg Commute Distance`, fill = Gender)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  ggtitle("Average Commuting Distance by Job Role and Gender") + 
+  ylab("Avg Commuting Distance") + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", family = "Helvetica"))+
+  scale_fill_manual(values = c("steel blue", "orange"))
+```
+
+Average commuting distance seems gender-invariant for the most part.
