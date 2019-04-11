@@ -14,6 +14,7 @@ knitr::opts_chunk$set(comment = NA, warning = FALSE, message = FALSE)
 ```{r}
 library(tidyverse)
 library(kableExtra)
+library(magrittr)
 ```
 
 ```{r}
@@ -82,7 +83,7 @@ emp_data %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 ```
 
-Not suprisingly, Managers have worked longer at their current company and sales reps the least.
+Not surprisingly, Managers have worked longer at their current company and sales reps the least.
 
 For each job role, do males or females tend to have longer commutes?  Our initial guess is that distance doesn't significantly differ. Let's see:
 
@@ -130,11 +131,30 @@ ggplot(emp_data, aes(JobRole, MonthlyIncome, fill = JobRole)) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", family = "Helvetica"))
 ```
 
-Interestingly, these two pairs ressectively:
+Interestingly, these two pairs respectively:
 
 * Research Director + Manager
 * Sales Executive + Manufacturing Director
 
 both have virtually identical average monthly incomes and distributions, that is the range in monthly income for both pairs are approximately the same.  The first pair are noticeably left-skewed while the second pair is right skewed.
 
-Alternatively, which job roles feature employees with higher ```RelationshipSatisfaction```?
+Now, we'd like to examine features and trends relating to attrition.  First, how does job involvement correlate to attrition for each job role?
+
+```{r}
+# get a data frame summarizing attrition numbers by job involvement for each job role
+emp_data$JobInvolvement %<>% as.character()
+emp_data %>%
+  group_by(JobRole, JobInvolvement) %>%
+  summarise(Total = n()) %>%
+  as.data.frame() %>%
+  ggplot(aes(JobRole, Total, fill = JobInvolvement)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+  ggtitle("Employee Attrition reflecting Job Involvement") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", family = "Helvetica")) +
+  xlab("Job Role") + ylab("Attrition") + labs(fill = "Involvement")
+```
+
+It seems like those on the extremes (Involvement of 1 or 4), attrition is least.  But for those with involvement falling somewhere in the middle (2 and 3), attrition is highest.  
+
+
