@@ -13,18 +13,20 @@ knitr::opts_chunk$set(comment = NA, warning = FALSE, message = FALSE)
 
 ```{r}
 library(tidyverse)
+library(kableExtra)
 ```
 
 ```{r}
+setwd("~/Desktop/DataScience@SMU/DoingDataScience/CaseStudy_2")
 library(readxl)
-emp_data <- read_excel("~/Desktop/DataScience@SMU/DoingDataScience/CaseStudy2/CaseStudy2-data.xlsx")
+emp_data <- read_excel("CaseStudy2-data.xlsx")
 ```
 
 Exploratory questions
 - proportion of people married in each job role
 - proportion of males and females in each job role
 - frequency of travel by job role
-- which roles have high average employee loyality (measured by YearsAtCompany)
+- which job roles hold the highest average worker employment length
 
 High level statistics of number of people married in each role.
 
@@ -62,7 +64,9 @@ Let's answer the first question.
 emp_data %>% 
   group_by(BusinessTravel) %>%
   summarise(Divorced = sum(MaritalStatus == "Divorced")) %>%
-  arrange(desc(Divorced))
+  arrange(desc(Divorced)) %>%
+  kable(align = rep('c',2)) %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F)
 ```
 
 Those who travel frequently fall in the middle in terms of divorce numbers, but again we cannot make causal inferences.
@@ -73,7 +77,9 @@ Now we'll like to see which job roles hold the highest average worker employment
 emp_data %>%
   group_by(JobRole) %>%
   summarise(`Avg Yrs at Company` = round(mean(YearsAtCompany),2)) %>%
-  arrange(desc(`Avg Yrs at Company`))
+  arrange(desc(`Avg Yrs at Company`)) %>%
+  kable(align = rep('c',2)) %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F)
 ```
 
 Not suprisingly, Managers have worked longer at their current company and sales reps the least.
@@ -94,3 +100,41 @@ emp_data %>%
 ```
 
 Average commuting distance seems gender-invariant for the most part.
+
+We'd also like to know which job roles include a higher travel burden.
+
+```{r}
+emp_data %>%
+  filter(BusinessTravel == "Travel_Frequently") %>%
+  group_by(JobRole) %>%
+  summarise(Employees = n()) %>%
+  ggplot(aes(reorder(JobRole, Employees), Employees)) + 
+  geom_bar(stat = "identity", fill = "black") + 
+  coord_flip() + 
+  ggtitle("Frequent Business Travel by Job Role") +
+  xlab("Position") + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", family = "Helvetica")) + 
+  theme(legend.position = "none")
+```
+
+We'd like to compare salaries (assessed by ```MonthlyRate```) across all JobRoles)
+
+```{r}
+ggplot(emp_data, aes(JobRole, MonthlyIncome, fill = JobRole)) + 
+  geom_boxplot() + 
+  coord_flip() + 
+  theme(legend.position = "none") + 
+  ggtitle("Comparison of Monthly Income by Job Role") + 
+  ylab("Monthly Income") + 
+  xlab("Position") + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", family = "Helvetica"))
+```
+
+Interestingly, these two pairs ressectively:
+
+* Research Director + Manager
+* Sales Executive + Manufacturing Director
+
+both have virtually identical average monthly incomes and distributions, that is the range in monthly income for both pairs are approximately the same.  The first pair are noticeably left-skewed while the second pair is right skewed.
+
+Alternatively, which job roles feature employees with higher ```RelationshipSatisfaction```?
