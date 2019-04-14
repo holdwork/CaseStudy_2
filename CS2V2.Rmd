@@ -1,0 +1,862 @@
+---
+title: 'Case Study 2'
+author: "Team XYZ Rob Hazell  & Jim Holdnack"
+date: "April 16 2019"
+output: 
+ html_document:
+    keep_md: yes
+---
+#### Case Study 2 Identify factors related to employee attrition at a biotech firm.
+a. Initial steps - load data 
+b. evaluate data contents
+
+
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+data1 <- read_excel("C:/Users/jhold/Desktop/case study 2/CaseStudy2-data.xlsx")
+str(data1)
+head(data1)
+```
+#### The observed data is comprised of numeric and character variables. 
+a. evaluate each continuous variable for information level, distribution, and missing values
+b. create frequency distributions and plot to understand how scores are distrbuted
+
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+FreqTable <- function(X){ 
+  Table <- data.frame( table(X) ) 
+  Table$CumFreq <- cumsum(Table$Freq)
+  Table$Prop <- prop.table( Table$Freq ) 
+  Table$CumProp <-  cumsum( Table$Prop ) 
+  Table 
+} 
+library(ggplot2)
+library(psych)
+### Age of employee 
+ft1 <- FreqTable(data1$Age)
+ft1
+ggplot(data=ft1, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("Age") +ggtitle("Age Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft1, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("Age") +ggtitle("Age Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$Age)
+sum(is.na(data1$Age))
+```
+#### daily rate distribution
+``` {r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+ft2 <- FreqTable(data1$DailyRate)
+ft2
+hist(data1$DailyRate, main="Distribution of Daily Rate", breaks=20, xlab="DailyRate", border="black", col="blue", xlim=c(100,1500)) 
+ggplot(data=ft2, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("DailyRate") +ggtitle("Daily Rate Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$DailyRate)
+sum(is.na(data1$DailyRate))
+```
+#### distance from home
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft3 <- FreqTable(data1$DistanceFromHome)
+ft3
+hist(data1$DistanceFromHome, main="Distribution of Distance From Home", breaks=10, xlab="DistanceFromHome", border="black", col="blue", xlim=c(1,29)) 
+ggplot(data=ft3, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("DistanceFromHome") +ggtitle("Distance From Home Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$DistanceFromHome )
+sum(is.na(data1$DistanceFromHome ))
+
+```
+
+#### education level--ordinal
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft4 <- FreqTable(data1$Education)
+ft4
+ggplot(data=ft4, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("Education") +ggtitle("Education  Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft4, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("Education") +ggtitle("Education Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$Education )
+sum(is.na(data1$Education ))
+```
+#### Employee count
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft5 <- FreqTable(data1$EmployeeCount )
+ft5
+ggplot(data=ft5, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("EmployeeCount ") +ggtitle("Employee Count Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft5, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("EmployeeCount ") +ggtitle("Employee Cumulative Count   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$EmployeeCount  )
+sum(is.na(data1$EmployeeCount  ))
+
+### employee count has not information and will be dropped
+
+```
+#### Environmental satisfaction
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft6 <- FreqTable(data1$EnvironmentSatisfaction)
+ft6
+ggplot(data=ft6, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("EnvironmentSatisfaction") +ggtitle("Environment Satisfaction  Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft6, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("EnvironmentSatisfaction") +ggtitle("Environment Satisfaction Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$EnvironmentSatisfaction )
+sum(is.na(data1$EnvironmentSatisfaction ))
+
+
+```
+
+### Hourly Rate 
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft7 <- FreqTable(data1$HourlyRate)
+ft7
+hist(data1$HourlyRate, main="Distribution of Hourly Rate", breaks=10, xlab="HourlyRate", border="black", col="blue", xlim=c(30,100)) 
+ggplot(data=ft7, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("HourlyRate") +ggtitle("Hourly Rate Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$HourlyRate )
+sum(is.na(data1$HourlyRate ))
+
+```
+
+##### Job Involvement
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft8 <- FreqTable(data1$JobInvolvement)
+ft8
+ggplot(data=ft8, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("JobInvolvement") +ggtitle("Job Involvement  Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft8, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("JobInvolvement") +ggtitle("Job Involvement Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$JobInvolvement )
+sum(is.na(data1$JobInvolvement ))
+
+```
+#### Job Level
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft9 <- FreqTable(data1$JobLevel)
+ft9
+ggplot(data=ft9, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("JobLevel") +ggtitle("Job Level  Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft9, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("JobLevel") +ggtitle("Job Level Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$JobLevel )
+sum(is.na(data1$JobLevel ))
+
+```
+### Job Satisfaction
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft10 <- FreqTable(data1$JobSatisfaction)
+ft10
+ggplot(data=ft10, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("JobSatisfaction") +ggtitle("Job Satisfaction  Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft10, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("JobSatisfaction") +ggtitle("Job Satisfaction  Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$JobSatisfaction )
+sum(is.na(data1$JobSatisfaction ))
+
+```
+#### Monthly Income
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft11 <- FreqTable(data1$MonthlyIncome  )
+ft11
+hist(data1$MonthlyIncome, main="Distribution of Monthly Income", breaks=50, xlab="MonthlyIncome", border="black", col="blue", xlim=c(1000,20000)) 
+ggplot(data=ft11, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("MonthlyIncome  ") +ggtitle("Monthly Income Cumulative    Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$MonthlyIncome   )
+sum(is.na(data1$MonthlyIncome   ))
+
+```
+#### Monthly Rate
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft12 <- FreqTable(data1$MonthlyRate)
+ft12
+hist(data1$MonthlyRate, main="Distribution of Monthly Rate", breaks=50, xlab="MonthlyRate", border="black", col="blue", xlim=c(2090,27000)) 
+ggplot(data=ft12, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("MonthlyRate") +ggtitle("Monthly Rate Cumulative  Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$MonthlyRate )
+sum(is.na(data1$MonthlyRate ))
+
+```
+
+#### Number of Other Companies Empoyee has worked at
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft13 <- FreqTable(data1$NumCompaniesWorked )
+ft13
+ggplot(data=ft13, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("NumCompaniesWorked ") +ggtitle("Number of Other Companies Worked at Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft13, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("NumCompaniesWorked ") +ggtitle("Number of Other Companies Worked at Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$NumCompaniesWorked  )
+sum(is.na(data1$NumCompaniesWorked))
+
+```
+
+### Percent Salary Hike Received
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft14 <- FreqTable(data1$PercentSalaryHike )
+ft14
+ggplot(data=ft14, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("PercentSalaryHike ") +ggtitle("Percent Salary Hike   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft14, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("PercentSalaryHike ") +ggtitle("Percent Salary Hike   Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$PercentSalaryHike  )
+sum(is.na(data1$PercentSalaryHike))
+
+```
+
+### Performance Rating
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft15 <- FreqTable(data1$PerformanceRating)
+ft15
+ggplot(data=ft15, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("PerformanceRating ") +ggtitle("Performance Rating   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft15, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("PerformanceRating ") +ggtitle("Performance Rating   Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$PerformanceRating  )
+sum(is.na(data1$PerformanceRating))
+
+### performance rating has very little variance with most receiving 3's
+
+```
+#### Relationship Satisfaction
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft16 <- FreqTable(data1$RelationshipSatisfaction )
+ft16
+ggplot(data=ft16, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("RelationshipSatisfaction ") +ggtitle("RelationshipSatisfaction   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft16, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("RelationshipSatisfaction ") +ggtitle("RelationshipSatisfaction   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$RelationshipSatisfaction  )
+sum(is.na(data1$RelationshipSatisfaction  ))
+
+```
+#### Standard Hours
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft17 <- FreqTable(data1$StandardHours)
+ft17
+ggplot(data=ft17, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("StandardHours ") +ggtitle("Standard Hours   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft17, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("StandardHours ") +ggtitle("Standard Hours Cumulative   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$StandardHours)
+sum(is.na(data1$StandardHours))
+### note standard hours has no variance drop this variable
+```
+### Stock Option Level
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft18 <- FreqTable(data1$StockOptionLevel)
+ft18
+ggplot(data=ft18, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("StockOptionLevel ") +ggtitle("Stock Option Level   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft18, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("StockOptionLevel ") +ggtitle("Stock Option Level    Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$StockOptionLevel)
+sum(is.na(data1$StockOptionLevel))
+
+```
+####  Total Working Years
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft19 <- FreqTable(data1$TotalWorkingYears)
+ft19
+hist(data1$TotalWorkingYears, main="Total Working Years", breaks=15, xlab="TotalWorkingYears", border="black", col="blue", xlim=c(0,40)) 
+ggplot(data=ft19, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("TotalWorkingYears ") +ggtitle("Total Working Years   Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$TotalWorkingYears)
+sum(is.na(data1$TotalWorkingYears))
+
+```
+####  Training Times last year
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft20 <- FreqTable(data1$TrainingTimesLastYear)
+ft20
+ggplot(data=ft20, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("TrainingTimesLastYear ") +ggtitle("Training Times Last Year Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft20, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("TrainingTimesLastYear ") +ggtitle("Training Times Last Year Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$TrainingTimesLastYear)
+sum(is.na(data1$TrainingTimesLastYear))
+
+```
+#### Work Life Balance
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft21 <- FreqTable(data1$WorkLifeBalance)
+ft21
+ggplot(data=ft21, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("WorkLifeBalance ") +ggtitle("Work Life Balance   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft21, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("WorkLifeBalance ") +ggtitle("Work Life Balance   Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$WorkLifeBalance)
+sum(is.na(data1$WorkLifeBalance))
+
+```
+### Years at Company
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft22 <- FreqTable(data1$YearsAtCompany)
+ft22
+hist(data1$YearsAtCompany, main="Years At Company", breaks=15, xlab="YearsAtCompany", border="black", col="blue", xlim=c(0,40)) 
+ggplot(data=ft22, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("YearsAtCompany ") +ggtitle("Years A tCompany   Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$YearsAtCompany)
+sum(is.na(data1$YearsAtCompany))
+
+```
+#### Years in Current Role
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft23 <- FreqTable(data1$YearsInCurrentRole)
+ft23
+ggplot(data=ft23, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("YearsInCurrentRole ") +ggtitle("Years In CurrentRole   Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft23, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("YearsInCurrentRole ") +ggtitle("Years In CurrentRole  Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$YearsInCurrentRole)
+sum(is.na(data1$YearsInCurrentRole))
+
+```
+#### Years Since Last Promotion
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft24 <- FreqTable(data1$YearsSinceLastPromotion)
+ft24
+ggplot(data=ft24, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("YearsSinceLastPromotion ") +ggtitle("Years Since Last Promotion Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft24, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("YearsSinceLastPromotion ") +ggtitle("Years Since Last Promotion Cumulative Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$YearsSinceLastPromotion)
+sum(is.na(data1$YearsSinceLastPromotion))
+
+```
+#### Years with Current Manager
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ft25 <- FreqTable(data1$YearsWithCurrManager)
+ft25
+ggplot(data=ft25, aes(x=X, y=Freq)) +geom_bar(stat="identity") +ylab("Freq") + xlab("YearsWithCurrManager ") +ggtitle("Years With Current Manager Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+ggplot(data=ft25, aes(x=X, y=CumProp)) +geom_bar(stat="identity") +ylab("Freq") + xlab("YearsWithCurrManager ") +ggtitle("Years With Current Manager Cumulative  Histogram")+ theme(plot.title = element_text(hjust = 0.5)) + theme(legend.position="none")
+describe(data1$YearsWithCurrManager)
+sum(is.na(data1$YearsWithCurrManager))
+
+```
+
+##### Observations on Continuous Variables
+
+Most variables are no normally distributed, show significant skew and/or kurtosis
+Some variables have no information and wil be dropped
+  1. Standard Hours
+  2. Employee Count
+  
+Performance Rating has very little variance with only 3's and a few 4 ratings---This variable may not be useful
+
+No missing data was observed for any variable
+
+##### Next Step - Review Distributions of Nominal Variables
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+FreqTable(data1$Attrition)
+FreqTable(data1$BusinessTravel)
+FreqTable(data1$Department)
+FreqTable(data1$EducationField)
+FreqTable(data1$Gender)
+FreqTable(data1$JobRole)
+FreqTable(data1$MaritalStatus)
+FreqTable(data1$Over18)
+FreqTable(data1$OverTime)
+
+```
+
+#### Observations from nominal variables
+Attrition Rate is 16%
+Most staff work in R&D (64%)
+Most Degrees in Life Sciences (41%) and Medical (32%)
+Staff is More Male (60%) than Female (40%)
+Most Common Job Titles are Sales Exec (22%), Research Scientist (20%), and Lab technician (18%)
+More Married (46 %) than divorced (22%) or single (32%)
+Over 18 has no variance and will be dropped
+28% of staff work overtime
+
+No variable have missing data
+
+#####  Next step is to identify which continuous variables are associated with attrition
+For this exploratory activity, we will use a t-test without adjustment for number of tests as we do not want to eliminate variables that may be additive in a more comprehensive model 
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+t.test(data1$Age~data1$Attrition)
+t.test(data1$DailyRate~data1$Attrition)
+t.test(data1$DistanceFromHome~data1$Attrition)
+t.test( data1$Education~data1$Attrition)
+t.test( data1$EnvironmentSatisfaction~data1$Attrition)
+t.test( data1$HourlyRate~data1$Attrition)
+t.test( data1$JobInvolvement~data1$Attrition)
+t.test( data1$JobLevel~data1$Attrition)
+t.test( data1$JobSatisfaction~data1$Attrition)
+t.test( data1$MonthlyIncome~data1$Attrition)
+t.test( data1$MonthlyRate~data1$Attrition)
+t.test( data1$NumCompaniesWorked~data1$Attrition)
+t.test( data1$PercentSalaryHike~data1$Attrition)
+t.test( data1$PerformanceRating~data1$Attrition)
+t.test( data1$RelationshipSatisfaction~data1$Attrition)
+t.test( data1$StockOptionLevel~data1$Attrition)
+t.test( data1$TotalWorkingYears~data1$Attrition)
+t.test( data1$TrainingTimesLastYear~data1$Attrition)
+t.test( data1$WorkLifeBalance~data1$Attrition)
+t.test( data1$YearsAtCompany~data1$Attrition)
+t.test( data1$YearsInCurrentRole~data1$Attrition)
+t.test( data1$YearsSinceLastPromotion~data1$Attrition)
+t.test( data1$YearsWithCurrManager~data1$Attrition)
+
+```
+#### Findings from exploratory t-tests of ordinal Continuous Variables
+Variables that are significant related to attrition
+Age (p < .0001), Daily Rate (p < .05), Distance from Home (p < .01), Satisfaction with Work Environment (p < .001),  Job Involvement (p < .0001), Job Level (p < .0001), Job Satisfaction (p < .001), Monthly Income (p < .0001),  Relationship Satisfaction (p < .10 – borderline result), Stock Option Level ( p < .0001), Total Working Years ( p < .0001), Training Times Last Year (p < .05), Work Life Balance ( p < .05), Years at Company (p < .0001), Years in Current Role ( p < .0001), Years with Current Manager (P < .0001)
+
+There are many potential predictors of attrition
+
+#### Next step use chi-square to identify nominal variables that may be associated with attrition
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ct1 <- table(data1$RelationshipSatisfaction,data1$Attrition)
+ct2 <- table(data1$BusinessTravel,data1$Attrition)
+ct3 <- table(data1$Department,data1$Attrition)
+ct4 <- table(data1$EducationField,data1$Attrition)
+ct5 <- table(data1$Gender,data1$Attrition)
+ct6 <- table(data1$JobRole,data1$Attrition)
+ct7 <- table(data1$MaritalStatus,data1$Attrition)
+ct9 <- table(data1$OverTime,data1$Attrition)
+ct10 <- table(data1$JobSatisfaction,data1$Attrition)
+ct11 <- table(data1$EnvironmentSatisfaction,data1$Attrition)
+ct12 <- table(data1$Education,data1$Attrition)
+chisq.test(ct1)
+chisq.test(ct2)
+chisq.test(ct3)
+chisq.test(ct4)
+chisq.test(ct5)
+chisq.test(ct6)
+chisq.test(ct7)
+chisq.test(ct9)
+chisq.test(ct10)
+chisq.test(ct11)
+chisq.test(ct12)
+
+
+ct2 
+ct3 
+ct4 
+ct6 
+ct7 
+ct9 
+ct10
+ct11 
+
+```
+
+Nominal/ Ordinal Variables associated with attrition
+Variables significant associated with attrition rate:
+Business Travel (p < .0001), Department (p < .01), Education Field (p < .01), Job Role (p < .0001), Marital Status (p < .0001), Over Time (p < .0001), Job Satisfaction ( p < .0001), Environmental Satisfaction (p < .0001)
+
+##### Next Step Determine if any continuous variables are so highly correlated as to be redundant
+
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+x <- data1[,c(1,4,6,11,14,15,17,19,24,28,29,30,31,32,33,35)]
+corm <-cor(x)
+round(corm,2)
+pc1 <- princomp(x, cor=TRUE)
+summary(pc1) # print variance accounted for 
+loadings(pc1) # pc loadings 
+plot(pc1,type="lines") # scree plot 
+
+principal(x, nfactors=4, rotate="varimax")
+principal(x, nfactors=3, rotate="varimax")
+principal(x, nfactors=3, rotate="promax")
+principal(x, nfactors=2, rotate="promax")
+
+```
+#### Observations from intercorrelation of predictors
+Among continuous variables there appears to be a significant relationship among variables associated with age and moderate intercorrelations among other factors. 
+Exploratory factor analysis was used to understand the common variance among these measures.
+Principal components analysis indicated that 2 to 4 factors may best explain the relationships. Scree plot suggests 3 but 2-4 were explored.  Varimax and promax rotations were used to clarify the factor structure (varimax for orthogonal factors and promax for correlated factors) 
+The PCA results clearly show 2 strong factors
+1. Experience Level=age, Job Level, Monthly Income, Total Working Years
+2. Company Experience= Years at Company, Years in Current Role, Years with Current Manager
+The Third factor is less well defined but relates to Economic and Living factors = daily rate, distance from home, Stock Option Level and negative Work Life Balance
+Four Factor solution differentiates this third factor into
+1. Long Commute + Higher Pay Hike
+2. Daily Rate + Job Involvement + Stock Option Level
+Only the two strong factors will be considered for combined factor scores. 
+
+
+###### Next Step create dummy coding for nominal variables so specific responses can be identified as contributing to attrition in the final analysis 
+
+Also create z-scores to allow for factor score generation, convert to a
+metric of mean=50 and sd=10 to eliminate negative values
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+### normalize continous variables, use mean=50 and sd=10 to eliminate negative values 
+data1$agez <- (((data1$Age-mean(data1$Age))/sd(data1$Age) * 10) + 50)
+data1$joblevelz <- (((data1$JobLevel-mean(data1$JobLevel))/sd(data1$JobLevel)*10)
+               +50)
+data1$monthlyincomez <- (((data1$MonthlyIncome-mean(data1$MonthlyIncome))/sd(data1$MonthlyIncome) * 10) + 50)
+data1$totalworkingyearsz <- (((data1$TotalWorkingYears-mean(data1$TotalWorkingYears))/sd(data1$TotalWorkingYears) * 10) + 50)
+data1$yearsatcompancyz <- (((data1$YearsAtCompany-mean(data1$YearsAtCompany))/sd(data1$YearsAtCompany) * 10) + 50)
+data1$yearsincurrentrolez <- (((data1$YearsInCurrentRole-mean(data1$YearsInCurrentRole))/sd(data1$YearsInCurrentRole) * 10) + 50)
+data1$yearswithcurrentmanagerz <- (((data1$YearsWithCurrManager-mean(data1$YearsWithCurrManager))/sd(data1$YearsWithCurrManager) * 10) + 50)
+
+describe(data1$agez)
+describe(data1$joblevelz)
+describe(data1$monthlyincomez)
+describe(data1$totalworkingyearsz)
+describe(data1$yearsatcompancyz)
+describe(data1$yearsincurrentrolez)
+describe(data1$yearswithcurrentmanagerz)
+
+##### create factor scores
+
+data1$Experience <- (data1$agez + data1$joblevelz + data1$monthlyincomez + data1$totalworkingyearsz)/4
+data1$CompanyExp <- (data1$yearsatcompancyz + data1$yearsincurrentrolez + data1$yearswithcurrentmanagerz)/3
+
+describe(data1$Experience)
+describe(data1$CompanyExp)
+
+##### Create Dummy variables 
+data1$sex[data1$Gender=="Female"]  = 2
+data1$sex[data1$Gender=="Male"]  = 1
+data1$sex <- as.numeric(data1$sex)
+FreqTable(data1$sex)
+
+data1$AttNum[data1$Attrition=="Yes"]  = 1
+data1$AttNum[data1$Attrition=="No"]  = 0
+data1$AttNum <- as.factor(data1$AttNum)
+FreqTable(data1$AttNum)
+
+data1$FreqTravel <- 0
+data1$FreqTravel[data1$BusinessTravel=="Travel_Frequently"]  = 1
+data1$FreqTravel <- as.numeric(data1$FreqTravel)
+FreqTable(data1$FreqTravel)
+
+data1$NonTravel <- 0
+data1$NonTravel[data1$BusinessTravel=="Non-Travel"]  = 1
+data1$NonTravel <- as.numeric(data1$NonTravel)
+FreqTable(data1$NonTravel)
+
+data1$RDDept <- 0
+data1$RDDept[data1$Department=="Research & Development"]  = 1
+data1$RDDept <- as.factor(data1$RDDept)
+FreqTable(data1$RDDept)
+
+data1$HRdegree <- 0
+data1$HRdegree[data1$EducationField=="Human Resources"]  = 1
+data1$HRdegree <- as.factor(data1$HRdegree)
+FreqTable(data1$HRdegree)
+
+data1$LSdegree <- 0
+data1$LSdegree[data1$EducationField=="Life Sciences"]  = 1
+data1$LSdegree <- as.factor(data1$LSdegree)
+FreqTable(data1$LSdegree)
+
+data1$MKdegree <- 0
+data1$MKdegree[data1$EducationField=="Marketing"]  = 1
+data1$MKdegree <- as.factor(data1$MKdegree)
+FreqTable(data1$MKdegree)
+
+data1$MDdegree <- 0
+data1$MDdegree[data1$EducationField=="Medical"]  = 1
+data1$MDdegree <- as.factor(data1$MDdegree)
+FreqTable(data1$MDdegree)
+
+data1$HeathREPjob <- 0
+data1$HeathREPjob[data1$JobRole=="Healthcare Representative"]  = 1
+data1$HeathREPjob <- as.factor(data1$HeathREPjob)
+FreqTable(data1$HeathREPjob)
+
+data1$HRjob <- 0
+data1$HRjob[data1$JobRole=="Human Resources"]  = 1
+data1$HRjob <- as.factor(data1$HRjob)
+FreqTable(data1$HRjob)
+
+data1$LabTechjob <- 0
+data1$LabTechjob[data1$JobRole=="Laboratory Technician"]  = 1
+data1$LabTechjob <- as.factor(data1$LabTechjob)
+FreqTable(data1$LabTechjob)
+
+data1$Managerjob <- 0
+data1$Managerjob[data1$JobRole=="Manager"]  = 1
+data1$Managerjob <- as.factor(data1$Managerjob)
+FreqTable(data1$Managerjob)
+
+data1$ManDirjob <- 0
+data1$ManDirjob[data1$JobRole=="Manufacturing Director"]  = 1
+data1$ManDirjob <- as.factor(data1$ManDirjob)
+FreqTable(data1$ManDirjob)
+
+data1$ResDirjob <- 0
+data1$ResDirjob[data1$JobRole=="Research Director"]  = 1
+data1$ResDirjob <- as.factor(data1$ResDirjob)
+FreqTable(data1$ResDirjob)
+
+data1$ResScijob <- 0
+data1$ResScijob[data1$JobRole=="Research Scientist"]  = 1
+data1$ResScijob <- as.factor(data1$ResScijob)
+FreqTable(data1$ResScijob)
+
+data1$SalExecjob <- 0
+data1$SalExecjob[data1$JobRole=="Sales Executive"]  = 1
+data1$SalExecjob <- as.factor(data1$SalExecjob)
+FreqTable(data1$SalExecjob)
+
+data1$SalRepjob <- 0
+data1$SalRepjob[data1$JobRole=="Sales Representative"]  = 1
+data1$SalRepjob <- as.factor(data1$SalRepjob)
+FreqTable(data1$SalRepjob)
+
+data1$Married <- 0
+data1$Married[data1$MaritalStatus=="Married"]  = 1
+data1$Married<- as.numeric(data1$Married)
+FreqTable(data1$Married)
+
+data1$Single <- 0
+data1$Single[data1$MaritalStatus=="Single"]  = 1
+data1$Single<- as.numeric(data1$Single)
+FreqTable(data1$Single)
+
+data1$OT <- 0
+data1$OT[data1$OverTime=="Yes"]  = 1
+data1$OT<- as.numeric(data1$OT)
+FreqTable(data1$OT)
+
+#### create sex interactions 
+
+data1$SexbyOT <- data1$sex*data1$OT
+data1$SexbyMarried <- data1$sex * data1$Married
+data1$SexbySingle <- data1$sex * data1$Single
+data1$SexbyFreqTrav <- data1$sex * data1$FreqTravel 
+data1$SexbyNonTrav <- data1$sex * data1$NonTravel 
+FreqTable(data1$SexbyOT)
+FreqTable(data1$SexbyMarried)
+FreqTable(data1$SexbySingle)
+FreqTable(data1$SexbyFreqTrav)
+FreqTable(data1$SexbyNonTrav)
+```
+#### Next Step is subset the data into a training and test sets
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+set.seed(50) 
+subset1 <- sample.int(n = nrow(data1), size = floor(.75*nrow(data1)), replace = F)
+data1train <- data1[subset1, ]
+data1test  <- data1[-subset1, ]
+str(data1train)
+str(data1test)
+
+
+```
+#### Next Step - Model exploration using logistic regression
+logistic regression was selected as a procedure that specifically addresses binomial probability prediction
+
+Model 1: all individual variables, that is non of the combined factors or interactions are included.
+Model 2: dropping individual z-scores from the factors and using the factor scores.  
+Model 3: all individual variables adding in sex interactions
+
+
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+logout1 <- glm(AttNum ~OT + Single + Married + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+               + sex + agez + joblevelz + monthlyincomez + totalworkingyearsz + yearsatcompancyz + yearsincurrentrolez + yearswithcurrentmanagerz 
+               + DailyRate + DistanceFromHome + EnvironmentSatisfaction + JobInvolvement + JobSatisfaction + RelationshipSatisfaction 
+               + StockOptionLevel + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=binomial(link="logit"))
+summary(logout1)
+
+logout2 <- glm(AttNum ~OT + Single + Married + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+               + sex + agez + Experience + CompanyExp 
+               + DailyRate + DistanceFromHome + EnvironmentSatisfaction + JobInvolvement + JobSatisfaction + RelationshipSatisfaction 
+               + StockOptionLevel + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=binomial(link="logit"))
+summary(logout2)
+logout3 <- glm(AttNum ~OT + Single + Married + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+               + sex + agez + joblevelz + monthlyincomez + totalworkingyearsz + yearsatcompancyz + yearsincurrentrolez + yearswithcurrentmanagerz 
+               + DailyRate + DistanceFromHome + EnvironmentSatisfaction + JobInvolvement + JobSatisfaction + RelationshipSatisfaction 
+               + StockOptionLevel + TrainingTimesLastYear + WorkLifeBalance + SexbyOT + SexbyMarried + SexbySingle + SexbyFreqTrav 
+               + SexbyNonTrav, data=data1train, family=binomial(link="logit"))
+summary(logout3)
+
+
+```
+
+### Initial model exploration indicated that model 1 and model 2 performed nearly identially with AIC = 727 and AIC = 725 with slightly worse at Model 3 AIC= 735.
+
+Observations:
+a. Factors scores did not perform better than individual predictors and actually performed much worse than the individual scores
+b. Interactions did not improve the model fit and none were statistically significant
+c. health representative job was redundant in the model and yielded a "na"" for predicton
+
+#### Next step improve the parsimony of the model and cross-validate the results
+a. rerun analysis dropping non-significant variables where p > .10 and using non-transformed scores (e.g. dropping standardized (z) scores)
+b. re-evaluate results and determine if variable significance level changes in reduced model
+c. rerun analysis with variables p < .05 only
+d. use test data set to evaluate model implementation.  
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+logout4 <- glm(AttNum ~OT + Single + Married + SalExecjob +SalRepjob + LabTechjob + MDdegree + LSdegree + NonTravel + FreqTravel + YearsAtCompany
+                + YearsInCurrentRole + DistanceFromHome + EnvironmentSatisfaction + JobInvolvement + JobSatisfaction + RelationshipSatisfaction 
+                + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=binomial(link="logit"))
+summary(logout4)
+logout5 <- glm(AttNum ~OT + Single + Married + SalExecjob +SalRepjob + LabTechjob + MDdegree + FreqTravel + YearsInCurrentRole + DistanceFromHome 
+               + EnvironmentSatisfaction + JobInvolvement + JobSatisfaction + RelationshipSatisfaction 
+                + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=binomial(link="logit"))
+summary(logout5)
+
+library(gmodels)
+
+data1train$pred1 <- logout1$fitted.values
+data1train$Class1 <- 0
+data1train$Class1[data1train$pred1 >= .50]  = 1
+mftr1 <-CrossTable(data1train$AttNum, data1train$Class1)
+mftr1 
+
+data1test$pred1 <- predict(logout1, data1test, type="response") 
+data1test$Class1 <- 0
+data1test$Class1[data1test$pred1 >= .50]  = 1
+mfte1 <-CrossTable(data1test$AttNum, data1test$Class1)
+mfte1
+
+data1train$pred5 <- logout5$fitted.values
+data1train$Class5 <- 0
+data1train$Class5[data1train$pred5 >= .50]  = 1
+mftr5 <-CrossTable(data1train$AttNum, data1train$Class5)
+mftr5 
+
+data1test$pred5 <- predict(logout5, data1test, type="response") 
+data1test$Class5 <- 0
+data1test$Class5[data1test$pred1 >= .50]  = 1
+mfte5 <-CrossTable(data1test$AttNum, data1test$Class5)
+mfte5
+
+
+```
+##### Observations from results
+a. The final reduced model "logout5" had nearly the same AIC (725) as model 1 (727) which had more predictors. 
+b. The cross validation showed that model 1 had a prediction accuracy of 88% in the training data and 87% in the test cases,
+  precision for model 1 was 72% , and recall was 42% and for test model 1 precision was 70%, and recall was 39% 
+c. The cross validation showed that model 5 had a prediction accuracy of 88% in the training data and 87% in the test cases,
+  precision for training model 5 was 74%, and recall was 38% and for test model 5 precision was 70%, and recall was 39% 
+D. the results indicate that in terms of overall accuracy and test case performance model 1 and model 5 were equivalent, for
+practical purposes model 5 is better as there is less data to track and collect for future implementation.
+E. The significant predictors of attrition in order of best to least predictive are:
+  1. Overtime (higher indicates more likely to leave)
+  2. Sales Representative Job (Sales Reps more likely to leave)
+  3. Lab technicians (lab technicians are more likely to leave)
+  4. Single or not (being single indicates more likely to leave)
+  5. Job Involvement (less job involvement indicates more likely to leave)
+  6. Job Satisfaction (lower job satisfaction indicates more likely to leave)
+  7. Years in current role (less time in current role more likely to leave)
+  8. Frequent Travel (Frequent travelers are more likely to leave)
+  9. Enviornmental Satisfaction (Less satisfaction with workplace environment are more likely to leave)
+*** Less important but significant predictors 
+  10. Relationship Satisfaction (those reporting negative work relationships more likely to leave)
+  11. Sales Representative Job (Sales Reps more likely to leave)
+  12. Training Times Last Year (Those having fewer trainings were more likely to leave)
+  13. Work Distance from Home (Those with longer commutes more likely to leave)
+  14. Work Life Balance (less work life balance more likely to leave) 
+  15. Medical Degree (those not having a medical degree more likely to leave)
+  16. Married or not (being married indicates more likely to leave)
+
+
+##### Next Step attempt at machine learning version of classification
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(mlr)
+data2train <- data1train[,c(1,4,6,7,11,13,14,15,17,19,20,21,24,25,26,28,29,30,31,32,33,34,35,46,47,48,49,50,51,52,53,55:65)]
+data2test <- data1test[,c(1,4,6,7,11,13,14,15,17,19,20,21,24,25,26,28,29,30,31,32,33,34,35,46,47,48,49,50,51,52,53,55:65)]
+str(data2train)
+str(data2test)
+
+trainTask <- makeClassifTask(data = data2train,target = "AttNum")
+lrn1 <- makeLearner("classif.logreg", predict.type = "prob")
+testTask <- makeClassifTask(data = data2test, target = "AttNum")
+trainmod1 <- train(learner=lrn1,task=trainTask)
+predmod1<- predict(trainmod1, task=trainTask, data=data2test)
+getLearnerModel(trainmod1)
+calculateConfusionMatrix(predmod1)
+```
+#### Observation of machine learning model
+a. the AIC of 704 was sightly better than all other models
+b. The overall training accuracy of 89%, precision of 77%, and recall of 47% were slightly better than the standard logistic regression model
+c. Getting the confusion matrix for the test file was not obvious even with searching MLR and the internet. 
+
+### Additional Analyses to identify factors related to predictors of attrition
+
+```{r , include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+logout6 <- glm(OT~ Single + Married + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+               + sex + agez + joblevelz + monthlyincomez + totalworkingyearsz + yearsatcompancyz + yearsincurrentrolez + yearswithcurrentmanagerz 
+               + DailyRate + DistanceFromHome + EnvironmentSatisfaction + JobInvolvement + JobSatisfaction + RelationshipSatisfaction 
+               + StockOptionLevel + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=binomial(link="logit"))
+summary(logout6)
+
+logout7 <- glm(JobInvolvement ~ Single + Married + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+               + sex + agez + joblevelz + monthlyincomez + totalworkingyearsz + yearsatcompancyz + yearsincurrentrolez + yearswithcurrentmanagerz 
+               + DailyRate + DistanceFromHome + EnvironmentSatisfaction +  JobSatisfaction + RelationshipSatisfaction 
+               + StockOptionLevel + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=gaussian(link="identity"))
+summary(logout7)
+logout8 <- glm(JobSatisfaction ~Single + Married + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel + FreqTravel
+               + sex + agez + joblevelz + monthlyincomez + totalworkingyearsz + yearsatcompancyz + yearsincurrentrolez + yearswithcurrentmanagerz 
+               + DailyRate + DistanceFromHome + EnvironmentSatisfaction + JobInvolvement  + RelationshipSatisfaction 
+               + StockOptionLevel + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=gaussian(link="identity"))
+summary(logout8)
+logout9 <- glm(FreqTravel ~ OT + Single + Married + SalRepjob + SalExecjob + ResScijob + ResDirjob + ManDirjob + Managerjob +
+                 LabTechjob + HRjob + HeathREPjob + MDdegree + MKdegree + LSdegree + HRdegree + RDDept + NonTravel 
+               + sex + agez + joblevelz + monthlyincomez + totalworkingyearsz + yearsatcompancyz + yearsincurrentrolez + yearswithcurrentmanagerz 
+               + DailyRate + DistanceFromHome + EnvironmentSatisfaction + JobInvolvement + JobSatisfaction + RelationshipSatisfaction 
+               + StockOptionLevel + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=binomial(link="logit"))
+summary(logout9)
+logout10 <- glm(EnvironmentSatisfaction  ~ JobInvolvement + Single + Married + SalRepjob + SalExecjob + ResScijob + ResDirjob
+                + ManDirjob + Managerjob + LabTechjob + HRjob + HeathREPjob + MDdegree + MKdegree + LSdegree + HRdegree + RDDept
+                + NonTravel + FreqTravel
+               + sex + agez + joblevelz + monthlyincomez + totalworkingyearsz + yearsatcompancyz + yearsincurrentrolez + yearswithcurrentmanagerz 
+               + DailyRate + DistanceFromHome  +  JobSatisfaction + RelationshipSatisfaction 
+               + StockOptionLevel + TrainingTimesLastYear + WorkLifeBalance, data=data1train, family=gaussian(link="identity"))
+summary(logout10)
+```
+#### Observations based on results of regression models
+a. Overtime is associated with individuals that do at least some travel but most importantly they have spent fewer years with their current manager and were provided fewer training opportunities in the past year.
+b. Job Involvement is lower for those with lower pay and had fewer years with the company, reseracher directors and managers are most involved in their jobs.
+c. Job staisfaction is higher for workers that identify as "single"
+d. Frequent travel is not related to other variables collected, though a trend for sales reps is present
+e. Work environment is unrelated to other variables
+
