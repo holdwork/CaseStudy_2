@@ -7,4 +7,4 @@ We reduced the initial list of potential predictors of attrition by t-test and c
 we created new variables by creating factor scores based on results of pca, we aso evaluated interactions
 We created training and test data sets (75% vs 25%) with a set.seed to allow for replaication
 we applied logistic regression model using GLM and also MLR. Results were similar betwwen approaches
-we provided extensive graphical disolays of trends in the company
+we provided extensive graphical displays of trends in the company
