@@ -1,11 +1,3 @@
----
-title: 'Case Study 2'
-author: "Team XYZ Rob Hazell  & Jim Holdnack"
-date: "April 16 2019"
-output: 
- html_document:
-    keep_md: yes
----
 ## Case Study 2 Identify factors related to employee attrition at a biotech firm.
 a. Initial steps - load data 
 b. evaluate data contents
